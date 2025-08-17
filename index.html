@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ritual Network Summoning Game</title>
+<style>
+  body {
+    background: radial-gradient(circle at center, #0a0a0a, #1a001a, #000);
+    color: #e0d9ff;
+    font-family: "Georgia", serif;
+    text-align: center;
+    padding: 50px;
+  }
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    color: #b47bff;
+    text-shadow: 0 0 15px #6a00ff;
+  }
+  #game, #leaderboard {
+    margin-top: 30px;
+    padding: 20px;
+    background: rgba(50, 0, 80, 0.6);
+    border: 2px solid #b47bff;
+    border-radius: 15px;
+    box-shadow: 0 0 20px #6a00ff;
+  }
+  button {
+    background: #6a00ff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1rem;
+    margin: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  button:hover {
+    background: #9b4dff;
+    box-shadow: 0 0 10px #b47bff;
+  }
+  ul { list-style: none; padding: 0; }
+  li { margin: 5px 0; font-size: 1.1rem; }
+  input {
+    padding: 8px;
+    font-size: 1rem;
+    border-radius: 5px;
+    border: none;
+    margin: 5px;
+  }
+</style>
+</head>
+<body>
+<h1>🔮 Ritual Network Summoning 🔮</h1>
+
+<div id="game">
+  <p id="story">The Ritual Engine stirs... Enter your summoner name to begin.</p>
+  <input type="text" id="nameInput" placeholder="Your summoner name">
+  <button id="startBtn" onclick="startGame()">Begin Ritual</button>
+</div>
+
+<div id="leaderboard" style="display:none;">
+  <h2>📜 Leaderboard 📜</h2>
+  <ul id="scoreList"></ul>
+</div>
+
+<script>
+let score = 0;
+let playerName = "";
+let questionIndex = 0;
+
+// 5-question Ritual Network quiz (20 points each)
+const questions = [
+  {
+    q: "When building a Ritual Network agent, you focus on…",
+    options: ["Data sovereignty and user control", "Speed and automation", "Collaborative intelligence"],
+    answer: 0
+  },
+  {
+    q: "Which is most important to the Ritual Engine?",
+    options: ["Decentralized trust", "Centralized efficiency", "Proprietary secrets"],
+    answer: 0
+  },
+  {
+    q: "What kind of knowledge should your AI agent use?",
+    options: ["User-owned, encrypted data", "Public open-source data", "Random internet scraping"],
+    answer: 0
+  },
+  {
+    q: "Which Ritual Network feature excites you most?",
+    options: ["Modular composability", "Only high-frequency trading", "Closed, siloed networks"],
+    answer: 0
+  },
+  {
+    q: "Your summoner’s path prioritizes…",
+    options: ["Community and collective mindshare", "Single-user automation", "Maximum token yield"],
+    answer: 0
+  }
+];
+
+function startGame() {
+  playerName = document.getElementById("nameInput").value.trim();
+  if (!playerName) {
+    alert("Enter a name, summoner!");
+    return;
+  }
+  score = 0;
+  questionIndex = 0;
+  document.getElementById("nameInput").style.display = "none";
+  document.getElementById("startBtn").style.display = "none";
+  showQuestion();
+}
+
+function showQuestion() {
+  const q = questions[questionIndex];
+  let html = `${q.q}<br><br>`;
+  q.options.forEach((opt, idx) => {
+    html += `<button onclick="answerQuestion(${idx})">${opt}</button>`;
+  });
+  document.getElementById("story").innerHTML = html;
+}
+
+function answerQuestion(option) {
+  const q = questions[questionIndex];
+  if (option === q.answer) score += 20; // 20 points per correct answer
+
+  questionIndex++;
+  if (questionIndex < questions.length) {
+    showQuestion();
+  } else {
+    showGlyphPuzzle();
+  }
+}
+
+// Glyph puzzle (flavor points)
+function showGlyphPuzzle() {
+  document.getElementById("story").innerHTML = 
+    "The Sigil of Modular Composability appears. Arrange the glyphs to reveal the protocol:<br><br>" +
+    `<input type="text" id="glyphInput" placeholder="Enter protocol">` +
+    `<button onclick="puzzle()">Submit</button>`;
+}
+
+function puzzle() {
+  let answer = document.getElementById("glyphInput").value.toUpperCase().trim();
+  if(answer === "RITUAL") score += 0; // flavor points, doesn't affect 100 max
+  showSummonSequence();
+}
+
+// Summon sequence (flavor points)
+function showSummonSequence() {
+  document.getElementById("story").innerHTML =
+    "Feed the Ritual Engine the sequence to deploy your AI agent (first letters of Collect, Encrypt, Share, Train, Deploy):<br><br>" +
+    `<input type="text" id="fibInput" placeholder="e.g. CESTD">` +
+    `<button onclick="summon()">Submit</button>`;
+}
+
+function summon() {
+  let seq = document.getElementById("fibInput").value.toUpperCase().replace(/\s+/g,'');
+  if(seq === "CESTD") score += 0; // flavor points
+  endGame();
+}
+
+// End game and leaderboard
+function endGame() {
+  let rank = score === 100 ? "✨ Data Alchemist ✨" :
+             score >= 80 ? "🔮 Node Sage 🔮" :
+             score >= 60 ? "🌑 Apprentice Summoner 🌑" :
+             "Novice Ritualist";
+
+  document.getElementById("story").innerHTML =
+    `Ritual complete!<br><br>Your score: ${score}/100<br>Your rank: ${rank}<br><br>` +
+    `<button onclick="restart()">Play Again</button>`;
+
+  saveScore(playerName, score, rank);
+  showLeaderboard();
+}
+
+function saveScore(name, score, rank) {
+  let scores = JSON.parse(localStorage.getItem("ritualScores")) || [];
+  scores.push({ name, score, rank });
+  scores.sort((a,b) => b.score - a.score);
+  scores = scores.slice(0,5);
+  localStorage.setItem("ritualScores", JSON.stringify(scores));
+}
+
+function showLeaderboard() {
+  let scores = JSON.parse(localStorage.getItem("ritualScores")) || [];
+  let list = document.getElementById("scoreList");
+  list.innerHTML = "";
+  scores.forEach(s => {
+    let li = document.createElement("li");
+    li.textContent = `${s.name}: ${s.score}/100 — ${s.rank}`;
+    list.appendChild(li);
+  });
+  document.getElementById("leaderboard").style.display = "block";
+}
+
+function restart() {
+  location.reload();
+}
+</script>
+</body>
+</html>
