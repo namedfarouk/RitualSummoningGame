@@ -65,27 +65,7 @@
   <ul id="scoreList"></ul>
 </div>
 
-<!-- Firebase SDK -->
-<script type="module">
-  // Import Firebase modules
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.1/firebase-app.js";
-  import { getDatabase, ref, push, query, orderByChild, limitToLast, onValue } from "https://www.gstatic.com/firebasejs/10.3.1/firebase-database.js";
-
-  // Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyDIuHcG8lkrMIAn0KHQgXl-iCpIboLk5BM",
-    authDomain: "ritualsummoninggame.firebaseapp.com",
-    projectId: "ritualsummoninggame",
-    storageBucket: "ritualsummoninggame.appspot.com",
-    messagingSenderId: "881510105639",
-    appId: "1:881510105639:web:5d57e54d1a5d0dd8eb4402",
-    measurementId: "G-GHYYE3FGR3"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-
+<script>
   let score = 0;
   let playerName = "";
   let questionIndex = 0;
@@ -97,6 +77,8 @@
     { q: "Which Ritual Network feature excites you most?", options: ["Modular composability", "Only high-frequency trading", "Closed, siloed networks"], answer: 0 },
     { q: "Your summoner’s path prioritizes…", options: ["Community and collective mindshare", "Single-user automation", "Maximum token yield"], answer: 0 }
   ];
+
+  const leaderboard = []; // Local leaderboard array
 
   function startGame() {
     playerName = document.getElementById("nameInput").value.trim();
@@ -173,37 +155,29 @@
   }
 
   function saveScore(name, score, rank) {
-    const scoresRef = ref(db, 'ritualScores');
-    push(scoresRef, { name, score, rank });
+    leaderboard.push({ name, score, rank });
+    leaderboard.sort((a,b) => b.score - a.score);
+    if(leaderboard.length > 5) leaderboard.pop();
   }
 
   function showLeaderboard() {
-    const scoresRef = query(ref(db, 'ritualScores'), orderByChild('score'), limitToLast(5));
-    onValue(scoresRef, (snapshot) => {
-      let scores = [];
-      snapshot.forEach(child => scores.push(child.val()));
-      scores.sort((a,b) => b.score - a.score);
-
-      let list = document.getElementById("scoreList");
-      list.innerHTML = "";
-      scores.forEach(s => {
-        let li = document.createElement("li");
-        li.textContent = `${s.name}: ${s.score}/100 — ${s.rank}`;
-        list.appendChild(li);
-      });
-      document.getElementById("leaderboard").style.display = "block";
+    const list = document.getElementById("scoreList");
+    list.innerHTML = "";
+    leaderboard.forEach(s => {
+      let li = document.createElement("li");
+      li.textContent = `${s.name}: ${s.score}/100 — ${s.rank}`;
+      list.appendChild(li);
     });
+    document.getElementById("leaderboard").style.display = "block";
   }
 
   window.restart = function() {
     location.reload();
   }
 
-  // Attach event listener after DOM is ready
   document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("startBtn").addEventListener("click", startGame);
   });
-
 </script>
 </body>
 </html>
