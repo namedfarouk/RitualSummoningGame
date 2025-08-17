@@ -57,7 +57,7 @@
 <div id="game">
   <p id="story">The Ritual Engine stirs... Enter your summoner name to begin.</p>
   <input type="text" id="nameInput" placeholder="Your summoner name">
-  <button id="startBtn" onclick="startGame()">Begin Ritual</button>
+  <button id="startBtn">Begin Ritual</button>
 </div>
 
 <div id="leaderboard" style="display:none;">
@@ -65,140 +65,145 @@
   <ul id="scoreList"></ul>
 </div>
 
-<script>
-let score = 0;
-let playerName = "";
-let questionIndex = 0;
+<!-- Firebase SDK -->
+<script type="module">
+  // Import Firebase modules
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.1/firebase-app.js";
+  import { getDatabase, ref, push, query, orderByChild, limitToLast, onValue } from "https://www.gstatic.com/firebasejs/10.3.1/firebase-database.js";
 
-// 5-question Ritual Network quiz (20 points each)
-const questions = [
-  {
-    q: "When building a Ritual Network agent, you focus on…",
-    options: ["Data sovereignty and user control", "Speed and automation", "Collaborative intelligence"],
-    answer: 0
-  },
-  {
-    q: "Which is most important to the Ritual Engine?",
-    options: ["Decentralized trust", "Centralized efficiency", "Proprietary secrets"],
-    answer: 0
-  },
-  {
-    q: "What kind of knowledge should your AI agent use?",
-    options: ["User-owned, encrypted data", "Public open-source data", "Random internet scraping"],
-    answer: 0
-  },
-  {
-    q: "Which Ritual Network feature excites you most?",
-    options: ["Modular composability", "Only high-frequency trading", "Closed, siloed networks"],
-    answer: 0
-  },
-  {
-    q: "Your summoner’s path prioritizes…",
-    options: ["Community and collective mindshare", "Single-user automation", "Maximum token yield"],
-    answer: 0
-  }
-];
+  // Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyDIuHcG8lkrMIAn0KHQgXl-iCpIboLk5BM",
+    authDomain: "ritualsummoninggame.firebaseapp.com",
+    projectId: "ritualsummoninggame",
+    storageBucket: "ritualsummoninggame.appspot.com",
+    messagingSenderId: "881510105639",
+    appId: "1:881510105639:web:5d57e54d1a5d0dd8eb4402",
+    measurementId: "G-GHYYE3FGR3"
+  };
 
-function startGame() {
-  playerName = document.getElementById("nameInput").value.trim();
-  if (!playerName) {
-    alert("Enter a name, summoner!");
-    return;
-  }
-  score = 0;
-  questionIndex = 0;
-  document.getElementById("nameInput").style.display = "none";
-  document.getElementById("startBtn").style.display = "none";
-  showQuestion();
-}
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
 
-function showQuestion() {
-  const q = questions[questionIndex];
-  let html = `${q.q}<br><br>`;
-  q.options.forEach((opt, idx) => {
-    html += `<button onclick="answerQuestion(${idx})">${opt}</button>`;
-  });
-  document.getElementById("story").innerHTML = html;
-}
+  let score = 0;
+  let playerName = "";
+  let questionIndex = 0;
 
-function answerQuestion(option) {
-  const q = questions[questionIndex];
-  if (option === q.answer) score += 20; // 20 points per correct answer
+  const questions = [
+    { q: "When building a Ritual Network agent, you focus on…", options: ["Data sovereignty and user control", "Speed and automation", "Collaborative intelligence"], answer: 0 },
+    { q: "Which is most important to the Ritual Engine?", options: ["Decentralized trust", "Centralized efficiency", "Proprietary secrets"], answer: 0 },
+    { q: "What kind of knowledge should your AI agent use?", options: ["User-owned, encrypted data", "Public open-source data", "Random internet scraping"], answer: 0 },
+    { q: "Which Ritual Network feature excites you most?", options: ["Modular composability", "Only high-frequency trading", "Closed, siloed networks"], answer: 0 },
+    { q: "Your summoner’s path prioritizes…", options: ["Community and collective mindshare", "Single-user automation", "Maximum token yield"], answer: 0 }
+  ];
 
-  questionIndex++;
-  if (questionIndex < questions.length) {
+  function startGame() {
+    playerName = document.getElementById("nameInput").value.trim();
+    if (!playerName) {
+      alert("Enter a name, summoner!");
+      return;
+    }
+    score = 0;
+    questionIndex = 0;
+    document.getElementById("nameInput").style.display = "none";
+    document.getElementById("startBtn").style.display = "none";
     showQuestion();
-  } else {
-    showGlyphPuzzle();
   }
-}
 
-// Glyph puzzle (flavor points)
-function showGlyphPuzzle() {
-  document.getElementById("story").innerHTML = 
-    "The Sigil of Modular Composability appears. Arrange the glyphs to reveal the protocol:<br><br>" +
-    `<input type="text" id="glyphInput" placeholder="Enter protocol">` +
-    `<button onclick="puzzle()">Submit</button>`;
-}
+  function showQuestion() {
+    const q = questions[questionIndex];
+    let html = `${q.q}<br><br>`;
+    q.options.forEach((opt, idx) => {
+      html += `<button onclick="answerQuestion(${idx})">${opt}</button>`;
+    });
+    document.getElementById("story").innerHTML = html;
+  }
 
-function puzzle() {
-  let answer = document.getElementById("glyphInput").value.toUpperCase().trim();
-  if(answer === "RITUAL") score += 0; // flavor points, doesn't affect 100 max
-  showSummonSequence();
-}
+  window.answerQuestion = function(option) {
+    const q = questions[questionIndex];
+    if (option === q.answer) score += 20;
 
-// Summon sequence (flavor points)
-function showSummonSequence() {
-  document.getElementById("story").innerHTML =
-    "Feed the Ritual Engine the sequence to deploy your AI agent (first letters of Collect, Encrypt, Share, Train, Deploy):<br><br>" +
-    `<input type="text" id="fibInput" placeholder="e.g. CESTD">` +
-    `<button onclick="summon()">Submit</button>`;
-}
+    questionIndex++;
+    if (questionIndex < questions.length) {
+      showQuestion();
+    } else {
+      showGlyphPuzzle();
+    }
+  }
 
-function summon() {
-  let seq = document.getElementById("fibInput").value.toUpperCase().replace(/\s+/g,'');
-  if(seq === "CESTD") score += 0; // flavor points
-  endGame();
-}
+  function showGlyphPuzzle() {
+    document.getElementById("story").innerHTML = 
+      "The Sigil of Modular Composability appears. Arrange the glyphs to reveal the protocol:<br><br>" +
+      `<input type="text" id="glyphInput" placeholder="Enter protocol">` +
+      `<button onclick="puzzle()">Submit</button>`;
+  }
 
-// End game and leaderboard
-function endGame() {
-  let rank = score === 100 ? "✨ Data Alchemist ✨" :
-             score >= 80 ? "🔮 Node Sage 🔮" :
-             score >= 60 ? "🌑 Apprentice Summoner 🌑" :
-             "Novice Ritualist";
+  window.puzzle = function() {
+    let answer = document.getElementById("glyphInput").value.toUpperCase().trim();
+    if(answer === "RITUAL") score += 0;
+    showSummonSequence();
+  }
 
-  document.getElementById("story").innerHTML =
-    `Ritual complete!<br><br>Your score: ${score}/100<br>Your rank: ${rank}<br><br>` +
-    `<button onclick="restart()">Play Again</button>`;
+  function showSummonSequence() {
+    document.getElementById("story").innerHTML =
+      "Feed the Ritual Engine the sequence to deploy your AI agent (first letters of Collect, Encrypt, Share, Train, Deploy):<br><br>" +
+      `<input type="text" id="fibInput" placeholder="e.g. CESTD">` +
+      `<button onclick="summon()">Submit</button>`;
+  }
 
-  saveScore(playerName, score, rank);
-  showLeaderboard();
-}
+  window.summon = function() {
+    let seq = document.getElementById("fibInput").value.toUpperCase().replace(/\s+/g,'');
+    if(seq === "CESTD") score += 0;
+    endGame();
+  }
 
-function saveScore(name, score, rank) {
-  let scores = JSON.parse(localStorage.getItem("ritualScores")) || [];
-  scores.push({ name, score, rank });
-  scores.sort((a,b) => b.score - a.score);
-  scores = scores.slice(0,5);
-  localStorage.setItem("ritualScores", JSON.stringify(scores));
-}
+  function endGame() {
+    let rank = score === 100 ? "✨ Data Alchemist ✨" :
+               score >= 80 ? "🔮 Node Sage 🔮" :
+               score >= 60 ? "🌑 Apprentice Summoner 🌑" :
+               "Novice Ritualist";
 
-function showLeaderboard() {
-  let scores = JSON.parse(localStorage.getItem("ritualScores")) || [];
-  let list = document.getElementById("scoreList");
-  list.innerHTML = "";
-  scores.forEach(s => {
-    let li = document.createElement("li");
-    li.textContent = `${s.name}: ${s.score}/100 — ${s.rank}`;
-    list.appendChild(li);
+    document.getElementById("story").innerHTML =
+      `Ritual complete!<br><br>Your score: ${score}/100<br>Your rank: ${rank}<br><br>` +
+      `<button onclick="restart()">Play Again</button>`;
+
+    saveScore(playerName, score, rank);
+    showLeaderboard();
+  }
+
+  function saveScore(name, score, rank) {
+    const scoresRef = ref(db, 'ritualScores');
+    push(scoresRef, { name, score, rank });
+  }
+
+  function showLeaderboard() {
+    const scoresRef = query(ref(db, 'ritualScores'), orderByChild('score'), limitToLast(5));
+    onValue(scoresRef, (snapshot) => {
+      let scores = [];
+      snapshot.forEach(child => scores.push(child.val()));
+      scores.sort((a,b) => b.score - a.score);
+
+      let list = document.getElementById("scoreList");
+      list.innerHTML = "";
+      scores.forEach(s => {
+        let li = document.createElement("li");
+        li.textContent = `${s.name}: ${s.score}/100 — ${s.rank}`;
+        list.appendChild(li);
+      });
+      document.getElementById("leaderboard").style.display = "block";
+    });
+  }
+
+  window.restart = function() {
+    location.reload();
+  }
+
+  // Attach event listener after DOM is ready
+  document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById("startBtn").addEventListener("click", startGame);
   });
-  document.getElementById("leaderboard").style.display = "block";
-}
 
-function restart() {
-  location.reload();
-}
 </script>
 </body>
 </html>
