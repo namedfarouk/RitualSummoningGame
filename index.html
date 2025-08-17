@@ -5,8 +5,8 @@
 <title>Ritual Network Summoning Game</title>
 <style>
   body {
-    background: radial-gradient(circle at center, #0a0a0a, #1a001a, #000);
-    color: #e0d9ff;
+    background: radial-gradient(circle at center, #001f2d, #00334d, #000);
+    color: #d0f0ff;
     font-family: "Georgia", serif;
     text-align: center;
     padding: 50px;
@@ -14,19 +14,19 @@
   h1 {
     font-size: 2.5rem;
     margin-bottom: 20px;
-    color: #b47bff;
-    text-shadow: 0 0 15px #6a00ff;
+    color: #00cfff;
+    text-shadow: 0 0 15px #0099cc;
   }
   #game, #leaderboard {
     margin-top: 30px;
     padding: 20px;
-    background: rgba(50, 0, 80, 0.6);
-    border: 2px solid #b47bff;
+    background: rgba(0, 51, 77, 0.6);
+    border: 2px solid #00cfff;
     border-radius: 15px;
-    box-shadow: 0 0 20px #6a00ff;
+    box-shadow: 0 0 20px #0099cc;
   }
   button {
-    background: #6a00ff;
+    background: #00cfff;
     color: white;
     border: none;
     padding: 10px 20px;
@@ -37,8 +37,8 @@
     transition: 0.2s;
   }
   button:hover {
-    background: #9b4dff;
-    box-shadow: 0 0 10px #b47bff;
+    background: #0099cc;
+    box-shadow: 0 0 10px #00cfff;
   }
   ul { list-style: none; padding: 0; }
   li { margin: 5px 0; font-size: 1.1rem; }
@@ -63,6 +63,7 @@
 <div id="leaderboard" style="display:none;">
   <h2>📜 Leaderboard 📜</h2>
   <ul id="scoreList"></ul>
+  <button id="shareTwitter" style="display:none;">Share on Twitter</button>
 </div>
 
 <script>
@@ -151,7 +152,7 @@
       `<button onclick="restart()">Play Again</button>`;
 
     saveScore(playerName, score, rank);
-    showLeaderboard();
+    showLeaderboard(rank);
   }
 
   function saveScore(name, score, rank) {
@@ -160,7 +161,7 @@
     if(leaderboard.length > 5) leaderboard.pop();
   }
 
-  function showLeaderboard() {
+  function showLeaderboard(rank) {
     const list = document.getElementById("scoreList");
     list.innerHTML = "";
     leaderboard.forEach(s => {
@@ -169,6 +170,15 @@
       list.appendChild(li);
     });
     document.getElementById("leaderboard").style.display = "block";
+
+    // Show Twitter share button
+    const shareBtn = document.getElementById("shareTwitter");
+    shareBtn.style.display = "inline-block";
+    shareBtn.onclick = function() {
+      const text = encodeURIComponent(`I just finished the Ritual Summoning Game! My score: ${score}, rank: ${rank}. Can you beat me? 🎮`);
+      const url = encodeURIComponent("https://ritual-summoning-game.vercel.app/");
+      window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, "_blank");
+    }
   }
 
   window.restart = function() {
@@ -179,5 +189,10 @@
     document.getElementById("startBtn").addEventListener("click", startGame);
   });
 </script>
+
+<footer style="text-align:center; padding:20px; background:#111; color:#fff; font-family: sans-serif;">
+  <p>Created by <a href="https://twitter.com/GalacticX__" target="_blank">@GalacticX__</a> | Discord: <a href="https://discord.com/users/906194753874448415" target="_blank">namedfarouk</a></p>
+  <p>Official Ritual Network: <a href="https://twitter.com/ritualnet" target="_blank">@ritualnet</a> | Discord: <a href="https://discord.gg/AxG7tkDE" target="_blank">Ritual</a></p>
+</footer>
 </body>
 </html>
